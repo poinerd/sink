@@ -33,12 +33,23 @@ func insertFormResponse(formResponse formResponseType, token string){
 
    // you have to order the rows the way its is in the DB
 	query:= `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
-	db.Exec(query, token, payLoadBytes)
+	_, execErr := db.Exec(query, token, payLoadBytes)
+
+	if execErr != nil {
+    fmt.Println("PostGres Error: ", execErr)
+	} else {
+    fmt.Println("Stuff written to database sucessfully")
+}
 
 }
 
 func submitForm(w http.ResponseWriter, r *http.Request){
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
 	/// From the link the user used to get here, we should be able to extract some details about the exact table to write the formDetails to
+	
 	var formDetails formResponseType
 	token := r.URL.Query().Get("token")
 	json.NewDecoder(r.Body).Decode(&formDetails)
@@ -53,6 +64,7 @@ func submitForm(w http.ResponseWriter, r *http.Request){
 // }
 
 func main(){
+
 	err := godotenv.Load()
 	if err != nil{
 	fmt.Println("There was an error finding the env file")
