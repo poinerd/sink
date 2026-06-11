@@ -18,13 +18,9 @@ var connectionString string
 // controller
 // the function takes in the response from the frontend and inserts it into the submissions table
 
-func insertFormResponse(formResponse formResponseType, token string){
+func insertFormResponse(formResponse formResponseType, token string, db *sql.DB){
     // connectionString := PROCESS.
-	db, err := sql.Open("pgx", connectionString )
-
-	if err != nil{
-		fmt.Println("There was an error openign the db")
-	}
+	
 	payLoadBytes, err:= json.Marshal(formResponse)
 
 	if err!= nil{
@@ -32,7 +28,7 @@ func insertFormResponse(formResponse formResponseType, token string){
 	}
 
    // you have to order the rows the way its is in the DB
-   
+
 	query:= `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
 	_, execErr := db.Exec(query, token, payLoadBytes)
 
@@ -44,7 +40,9 @@ func insertFormResponse(formResponse formResponseType, token string){
 
 }
 
-func submitForm(w http.ResponseWriter, r *http.Request){
+
+func submitForm(db *sql.DB) http.HandlerFunc {
+	return func (w http.ResponseWriter, r *http.Request){
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -54,8 +52,10 @@ func submitForm(w http.ResponseWriter, r *http.Request){
 	var formDetails formResponseType
 	token := r.URL.Query().Get("token")
 	json.NewDecoder(r.Body).Decode(&formDetails)
-	insertFormResponse(formDetails, token)
+	insertFormResponse(formDetails, token, db)
 	fmt.Println(formDetails)
+}
+
 }
 
 // func getAllFormResponses(w http.ResponseWriter, r *http.Request){
@@ -72,7 +72,11 @@ func main(){
 	}
 	connectionString = os.Getenv("CONNECTION_STRING")
 
-	http.HandleFunc("/submit", submitForm)
+	db, err := sql.Open("pgx", connectionString )
+
+
+	http.HandleFunc("/submit", submitForm(db))
+	http.HandleFunc("/signup", HandleSignup(db))
 
 	fmt.Println("server is up and running on port 8080")
 	http.ListenAndServe(":8000", nil)
