@@ -26,12 +26,13 @@ func insertFormResponse(formResponse formResponseType, token string){
 		fmt.Println("There was an error openign the db")
 	}
 	payLoadBytes, err:= json.Marshal(formResponse)
-    
+
 	if err!= nil{
 		fmt.Println("There was an error converting input to json")
 	}
 
    // you have to order the rows the way its is in the DB
+   
 	query:= `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
 	_, execErr := db.Exec(query, token, payLoadBytes)
 
@@ -76,4 +77,3 @@ func main(){
 	fmt.Println("server is up and running on port 8080")
 	http.ListenAndServe(":8000", nil)
 }
-
