@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "fmt"
     "net/http"
-
     "github.com/google/uuid"
     "golang.org/x/crypto/bcrypt"
 )
@@ -15,15 +14,18 @@ type acessFormat struct {
 	Email string `json:"email"`
 	Password string `json:"password"`
 }
+
+
 // controllers/// r stands for request as in request from the server to the client
+
 func HandleSignup(db *sql.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
- 
+
         if r.Method != http.MethodPost {
             http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
             return
         }
-
+        
         var signUpCredentials acessFormat
         err := json.NewDecoder(r.Body).Decode(&signUpCredentials)
         if err != nil {    
@@ -31,7 +33,6 @@ func HandleSignup(db *sql.DB) http.HandlerFunc {
             return
         }
 
-     
         hashedPassword, err := bcrypt.GenerateFromPassword([]byte(signUpCredentials.Password), bcrypt.DefaultCost)
         if err != nil {
             http.Error(w, "Error secure-hashing password", http.StatusInternalServerError)
