@@ -10,7 +10,6 @@ import (
 
 
 func main(){
-
 	db, err := loadDB()
 
 	if err != nil{

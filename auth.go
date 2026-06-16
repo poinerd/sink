@@ -1,12 +1,15 @@
 package main
 
 import (
-    "database/sql"
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "github.com/google/uuid"
-    "golang.org/x/crypto/bcrypt"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 
@@ -16,10 +19,18 @@ type acessFormat struct {
 }
 
 type User struct{
-    ID int  `json:"id"`
-    Email int `json:"email"`
-    Password string `json:"password"`
+    ID int  `db:"id"`
+    Email int `db:"email"`
+    Password string `db:"password"`
 }
+
+
+type CustomClaims struct {
+	UserID int `json:"user_id"`
+	jwt.RegisteredClaims
+}
+
+// var jwtSecret = []byte("super-secret-rain-in-hub-key-12345") /// What the hell is this?!
 
 // controllers/// r stands for request as in request from the server to the client
 
@@ -91,6 +102,33 @@ func handleSignIn(db *sql.DB) http.HandlerFunc{
             return
         }
 
-        
+        expirationTime := time.Now().Add(24 * time.Hour)
+
+        	claims := &CustomClaims{
+			UserID: existingUser.ID,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		}
+
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString(secret)
+		if err != nil {
+			fmt.Println("JWT signature error:", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+
+
+        // A map is the closest you have to a json format yeah
+        json.NewEncoder(w).Encode(map[string]string{
+            "token" :  tokenString,
+        })
+
+
     }
 }
