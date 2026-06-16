@@ -6,24 +6,36 @@ import(
 	"database/sql"
 )
 
-func insertFormResponse(formResponse formResponseType, token string, db *sql.DB){
-    // connectionString := PROCESS.
-	
+
+type formResponseType map[string]any 
+
+
+func insertFormResponseToDB(formResponse formResponseType, token string, db *sql.DB) error{
+
 	payLoadBytes, err:= json.Marshal(formResponse)
 
 	if err!= nil{
-		fmt.Println("There was an error converting input to json")
+		return fmt.Errorf("There was an error converting input to json")
 	}
-
-   // you have to order the rows the way it is in the DB
-
+	
 	query:= `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
-	_, execErr := db.Exec(query, token, payLoadBytes)
+	data := [...]any{token, payLoadBytes}
+    err = insertDataToDb(query, db, data)
+
+	if err != nil{
+		return fmt.Errorf("There was an error writing to the DB")
+	}
+	return  nil
+	
+}
+
+func insertDataToDb(query string, db *sql.DB, data ...any) error{
+
+	_, execErr := db.Exec(query, data...)
 
 	if execErr != nil {
-    fmt.Println("PostGres Error: ", execErr)
-	} else {
-    fmt.Println("Stuff written to database sucessfully")
+		return fmt.Errorf("Postgres Execution error")
+	} 
+    return nil
 }
 
-}

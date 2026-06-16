@@ -9,9 +9,6 @@ import (
 	"database/sql"
 )
 
-// type newFormEnpoint struct{
-// 	formDetails any
-// } 
 
 type createFormResponse struct{
 	EndPointURL string `json:"endpoint_url"`
@@ -20,16 +17,15 @@ type createFormResponse struct{
 
 func submitForm(db *sql.DB) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 	/// From the link the user used to get here, we should be able to extract some details about the exact table to write the formDetails to
-	
+
 	var formDetails formResponseType
 	token := r.URL.Query().Get("token")
 	json.NewDecoder(r.Body).Decode(&formDetails)
-	insertFormResponse(formDetails, token, db)
+	insertFormResponseToDB(formDetails, token, db)
 	fmt.Println(formDetails)
 }
 
@@ -37,7 +33,7 @@ func submitForm(db *sql.DB) http.HandlerFunc {
 
 // http.HandlerFunc ia the type of the controllers you write
 
-func createFormEndpoint(db *sql.DB) http.HandlerFunc {
+func createFormEndpoint(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
    /// Create a unique hash to asoociate with this particular form
    /// attach the hash to the back of the base url
@@ -56,22 +52,16 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc {
   responseObject := createFormResponse{
 	EndPointURL: formEndpoint,
   }
-
-  //  the first stuff goes to the DB
   w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(responseObject)
 
    query := `INSERT INTO forms (hash) VALUES ($1);`
-    _, execErr := db.Exec(query,formHash)
-        
-        if execErr != nil {
-            fmt.Println("Database Execution Error:", execErr)
-            http.Error(w, "Database write failure", http.StatusInternalServerError)
-            return
-        } 
+   data := [...]any{formHash}
+   err = insertDataToDb(query, db, data)
 
+   if err != nil{
+	  fmt.Println("There was an error writing to the database ", fmt.Errorf("Database write error"))
+   }
 }
-
-
 
 }
