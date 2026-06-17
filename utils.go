@@ -13,7 +13,7 @@ func insertFormResponseToDB(formResponse formResponseType, token string, db *sql
 	if err != nil {
 		return fmt.Errorf("there was an error converting input to json")
 	}
-	
+
 	query := `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
 	
 	err = insertDataToDb(query, db, token, payLoadBytes)

@@ -13,6 +13,7 @@ type createFormResponse struct{
 	EndPointURL string `json:"endpoint_url"`
 }
 
+
 func submitForm(db *sql.DB) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -28,8 +29,8 @@ func submitForm(db *sql.DB) http.HandlerFunc {
 }
 
 }
-// http.HandlerFunc ia the type of the controllers you write
 
+// http.HandlerFunc ia the type of the controllers you write
 
 func createFormEndpoint(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +38,7 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
    /// attach the hash to the back of the base url
    /// sav the complete enpoint to the DB
    /// Return that API endpoint to the user
-
+   
    bytes := make([]byte, 8)  // This is a slice of 8 bytes
    _ , err := rand.Read(bytes)
 
@@ -50,17 +51,20 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
   responseObject := createFormResponse{
 	EndPointURL: formEndpoint,
   }
+
   
+   query := `INSERT INTO forms (hash, user_id) VALUES ($1, $2);`
+   userID, _ := r.Context().Value(UserIDKey).(string)
+   err = insertDataToDb(query, db, formHash, userID)
+
+   if err != nil{
+      fmt.Println("error writing to the DB", err)
+      return
+   }
+
   w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(responseObject)
 
-   query := `INSERT INTO forms (hash) VALUES ($1);`
-   data := [...]any{formHash}
-   err = insertDataToDb(query, db, data)
-
-   if err != nil{
-	  fmt.Println("There was an error writing to the database ", fmt.Errorf("Database write error"))
-   }
 }
 
 }
