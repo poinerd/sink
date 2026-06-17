@@ -13,8 +13,6 @@ var connectionString string
 var baseUrl string
 var secret string
 
-
-
 func loadDB()(*sql.DB, error){
 
 	err := godotenv.Load()
@@ -37,7 +35,6 @@ func loadDB()(*sql.DB, error){
 
 func loadJWT() {
 	err := godotenv.Load()
-
 	if err != nil{
 		return 
 	}

@@ -9,16 +9,14 @@ import (
 	"database/sql"
 )
 
-
 type createFormResponse struct{
 	EndPointURL string `json:"endpoint_url"`
 }
 
-
 func submitForm(db *sql.DB) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+    w.Header().Set("Access-Control-Allow-Headers","Content-Type")
 
 	/// From the link the user used to get here, we should be able to extract some details about the exact table to write the formDetails to
 
@@ -30,8 +28,8 @@ func submitForm(db *sql.DB) http.HandlerFunc {
 }
 
 }
-
 // http.HandlerFunc ia the type of the controllers you write
+
 
 func createFormEndpoint(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +50,7 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
   responseObject := createFormResponse{
 	EndPointURL: formEndpoint,
   }
+  
   w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(responseObject)
 

@@ -19,8 +19,8 @@ func main(){
 	http.HandleFunc("/submit", submitForm(db))
 	http.HandleFunc("/signup", HandleSignup(db))
 	http.HandleFunc("/createForm", createFormEndpoint(db))
+    http.HandleFunc("/signin", handleSignIn(db) )
 
-
-	fmt.Println("server is up and running on port 8080")
+	fmt.Println("server is up and running on port 8000")
 	http.ListenAndServe(":8000", nil)
 }
