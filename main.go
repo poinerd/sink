@@ -15,7 +15,7 @@ func main(){
 	http.HandleFunc("/signup", HandleSignup(db))
     http.HandleFunc("/signin", handleSignIn(db) )
 	http.HandleFunc("/create", authMiddleWare(createFormEndpoint(db)))
-
+	
 	fmt.Println("server is up and running on port 8000")
 	http.ListenAndServe(":8000", nil)
 }
