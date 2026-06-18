@@ -52,7 +52,6 @@ func HandleSignup(db *sql.DB) http.HandlerFunc {
 
 		userEmail := signUpCredentials.Email
 		UUID := uuid.New().String()
-
 		query := `INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3);`
 		
 		err = insertDataToDb(query, db, UUID, userEmail, string(hashedPassword))
@@ -90,9 +89,8 @@ func handleSignIn(db *sql.DB) http.HandlerFunc {
 
 		var existingUser User
 		query := `SELECT id, password_hash from users WHERE email = $1;`
-		
 		// FIXED: Included pointers (&) to write the results back to your struct
-		
+
         err = db.QueryRow(query, signInCredentials.Email).Scan(&existingUser.ID, &existingUser.Password)
 		if err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -119,6 +117,8 @@ func handleSignIn(db *sql.DB) http.HandlerFunc {
         // you sign the jwt with your secret
 
 		tokenString, err := token.SignedString([]byte(secret))
+        fmt.Printf("The jwt secret is %s", tokenString)
+        
 		if err != nil {
 			fmt.Println("JWT signature error:", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)

@@ -14,9 +14,11 @@ func insertFormResponseToDB(formResponse formResponseType, token string, db *sql
 		return fmt.Errorf("there was an error converting input to json")
 	}
 
-	query := `INSERT INTO submissions (form_token, payload) VALUES ($1 , $2);`
+	query := `INSERT INTO submissions (payload, form_hash) VALUES ($1 , $2);`
+
+	// i need to put hash here too
 	
-	err = insertDataToDb(query, db, token, payLoadBytes)
+	err = insertDataToDb(query, db, payLoadBytes, token)
 	if err != nil {
 		return fmt.Errorf("there was an error writing to the DB: %w", err)
 	}
