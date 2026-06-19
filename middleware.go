@@ -13,8 +13,8 @@ const UserIDKey contextKey = "UserID"
 
 func authMiddleWare(next http.HandlerFunc ) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request){
+		
 		authBody := r.Header.Get("Authorization")
-
 		if authBody == "" || !strings.HasPrefix(authBody, "Bearer ") {
 			http.Error(w, "Unauthorized: Missing or malformed token", http.StatusUnauthorized)
 			return

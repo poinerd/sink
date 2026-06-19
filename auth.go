@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
 	"github.com/golang-jwt/jwt/v5"
-	
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -30,7 +29,6 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-
 func HandleSignup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -50,7 +48,7 @@ func HandleSignup(db *sql.DB) http.HandlerFunc {
 			http.Error(w, "Error secure-hashing password", http.StatusInternalServerError)
 			return
 		}
-
+	
 		userEmail := signUpCredentials.Email
 		UUID := uuid.New().String()
 		query := `INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3);`
@@ -90,7 +88,6 @@ func handleSignIn(db *sql.DB) http.HandlerFunc {
 
 		var existingUser User
 		query := `SELECT id, password_hash from users WHERE email = $1;`
-		// FIXED: Included pointers (&) to write the results back to your struct
 
         err = db.QueryRow(query, signInCredentials.Email).Scan(&existingUser.ID, &existingUser.Password)
 		if err != nil {
@@ -113,18 +110,18 @@ func handleSignIn(db *sql.DB) http.HandlerFunc {
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
 			},
 		}
-
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
         // you sign the jwt with your secret
 
 		tokenString, err := token.SignedString([]byte(secret))
         fmt.Printf("The jwt secret is %s", tokenString)
-        
+    
 		if err != nil {
 			fmt.Println("JWT signature error:", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{

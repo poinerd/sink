@@ -19,9 +19,14 @@ type newFormName struct{
 
 func submitForm(db *sql.DB) http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
+
+      if r.Method != http.MethodPost{
+         http.Error(w, "This method is not supoorted", http.StatusMethodNotAllowed)
+         return
+      }
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
    w.Header().Set("Access-Control-Allow-Headers","Content-Type")
-	/// From the link the user used to get here, we should be able to extract some details about the exact table to write the formDetails to
    
 	var formDetails formResponseType
 	token := r.URL.Query().Get("token")
@@ -33,6 +38,7 @@ func submitForm(db *sql.DB) http.HandlerFunc {
             http.Error(w, "Form endpoint not found or inactive", http.StatusNotFound)
             return
         }
+
 	json.NewDecoder(r.Body).Decode(&formDetails)
 
    // Handle empty reponse body gracefully o
@@ -44,17 +50,18 @@ func submitForm(db *sql.DB) http.HandlerFunc {
 }
 
 // http.HandlerFunc ia the type of the controllers you write
+
 func createFormEndpoint(db *sql.DB) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
-   /// Create a unique hash to asoociate with this particular form
-   /// attach the hash to the back of the base url
-   /// save the complete enpoint to the DB
-   /// Return that API endpoint to the user
+   if r.Method != http.MethodPost{
+      http.Error(w, "This http method is not allowed", http.StatusMethodNotAllowed)
+      return
+   }
+
    var newForm newFormName
    json.NewDecoder(r.Body).Decode(&newForm)
 
-  // Alternative: Just take the first 12 characters of a UUID for absolute safety
-  formHash := uuid.New().String()[:12]
+  formHash := uuid.New().String()[:10]
   tail := "submit?token=" + formHash
   formEndpoint := fmt.Sprintf("%s%s", baseUrl, tail)
 
@@ -76,13 +83,12 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
    newFormName := newForm.FormName
 
    err := insertDataToDb(query, db, formHash, userID, newFormName, targetEmail)
-
    if err != nil{
       http.Error(w, "Failed to save form endpoint", http.StatusInternalServerError)
       fmt.Println("error writing to the DB", err)
       return
    }
-
+   
   w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(responseObject)
 
