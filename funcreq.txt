@@ -1,3 +1,3 @@
-1. The admin can view all their form(s) responses on a simple, clean dashboard
-2. The admin can create and get a new endpoint for a new form and give it a name
-3. The admin can get a mail notification whenever anyone fills any of their forms
+1. The admin can view all their form(s) responses on a simple, clean dashboard ---done
+2. The admin can create and get a new endpoint for a new form and give it a name ---done
+3. The admin can get a mail notification whenever anyone fills any of their forms  

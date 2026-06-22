@@ -30,6 +30,14 @@ func submitForm(db *sql.DB) http.HandlerFunc {
    w.Header().Set("Access-Control-Allow-Headers","Content-Type")
 
 	var formDetails formResponseType
+	json.NewDecoder(r.Body).Decode(&formDetails)
+    
+   if len(formDetails) == 0 {
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"status": "ignored", "message": "Empty submission ignored"}`))
+    return
+   }
+
 	token := r.URL.Query().Get("token")
 
    var formExists bool
@@ -40,7 +48,6 @@ func submitForm(db *sql.DB) http.HandlerFunc {
             return
         }
 
-	json.NewDecoder(r.Body).Decode(&formDetails)
 
    // Handle empty reponse body gracefully o
    // if the user cliks thier submit button and there is nothing in their field, it shoudl intiate a DB write even if the dev didnt set the input tags to be required
@@ -93,32 +100,48 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
 
 }
 
-// The admin needs to be able to get the reponse to all of his forms
-// An admin can have more than 1 form
-// The stuff that connects all the differnet forms is the hash thats user 
+func getAllFormResponses(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        responseHash := r.URL.Query().Get("token")
+        
 
-func getAllFormResponses(db *sql.DB) http.HandlerFunc{
-   return func(w http.ResponseWriter, r *http.Request){
+        query := `SELECT payload FROM submissions WHERE form_hash = $1`
+        rows, err := db.Query(query, responseHash)
+        if err != nil {
+            fmt.Println("Database query error:", err)
+            http.Error(w, "There was an error fetching your responses", http.StatusInternalServerError)
+            return
+        }
+        defer rows.Close()
 
-      responseHash := r.URL.Query().Get("token")
-      var container []byte
+        // 2. Aggregate raw JSON payloads into a valid JSON array string
+        // We use json.RawMessage so Go knows not to Base64 encode it
+        var allResponses []json.RawMessage
 
-      query := `SELECT payload from submissions where form_hash = $1`
+        for rows.Next() {
+            var container []byte
+            if err := rows.Scan(&container); err != nil {
+                fmt.Println("Row scan error:", err)
+                http.Error(w, "Error processing responses", http.StatusInternalServerError)
+                return
+            }
+            allResponses = append(allResponses, json.RawMessage(container))
+        }
 
-      err := db.QueryRow(query, responseHash).Scan(&container)
+        if err = rows.Err(); err != nil {
+            fmt.Println("Rows iteration error:", err)
+            http.Error(w, "Error processing responses", http.StatusInternalServerError)
+            return
+        }
 
-      if err != nil{
-       http.Error(w, "There was an error fetching your responses", http.StatusInternalServerError)
-       fmt.Println("there was an error", err)
-       return 
-      }
-      w.Header().Set("Content-Type", "Application/json")
-   
-      json.NewEncoder(w).Encode(container)
-     
-   }
+        if allResponses == nil {
+            allResponses = []json.RawMessage{}
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(allResponses)
+    }
 }
-
 
 
 
