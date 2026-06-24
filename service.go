@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"database/sql"
 )
+
 type createFormResponse struct{
 	EndPointURL string `json:"endpoint_url"`
 }
@@ -47,7 +48,6 @@ func submitForm(db *sql.DB) http.HandlerFunc {
             http.Error(w, "Form endpoint not found or inactive", http.StatusNotFound)
             return
         }
-
 
    // Handle empty reponse body gracefully o
    // if the user cliks thier submit button and there is nothing in their field, it shoudl intiate a DB write even if the dev didnt set the input tags to be required
@@ -93,7 +93,7 @@ func createFormEndpoint(db *sql.DB) http.HandlerFunc{
       fmt.Println("error writing to the DB", err)
       return
    }
-
+   
   w.Header().Set("Content-Type", "application/json")
   json.NewEncoder(w).Encode(responseObject)
 }
